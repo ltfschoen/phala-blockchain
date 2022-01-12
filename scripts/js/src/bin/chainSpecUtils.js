@@ -3,7 +3,8 @@
 // Can be useful after a "hard-spoon" of a live blockchain to spawn a new chain for testing.
 // Partically forked from fork-off-substrate (https://raw.githubusercontent.com/maxsam4/fork-off-substrate)
 
-const { loadJson, /*writeJson*/ } = require('../utils/common');
+const fs = require('fs');
+const { loadJson, /*writeJson*/ } = require('./utils/common');
 const { xxhashAsHex } = require('@polkadot/util-crypto');
 
 const { program } = require('commander');
@@ -45,6 +46,8 @@ program
 
 function main(origSpecPath) {
     const opts = program.opts();
+    console.log('opts: ', opts);
+    console.log('origSpecPath: ', origSpecPath);
     // const origSpec = loadJson(origSpecPath);
     const targetSpec = loadJson(origSpecPath);
 
@@ -100,8 +103,17 @@ function main(origSpecPath) {
     // To prevent the validator set from changing mid-test, set Staking.ForceEra to ForceNone ('0x02')
     const STAKING_FORCE_ERA = '0x5f3e4907f716ac89b6347d15ececedcaf7dad0317324aecae8744b87fc95f2f3';
     if (targetSpec.genesis.raw.top[STAKING_FORCE_ERA]) {
-        forkedSpec.genesis.raw.top[STAKING_FORCE_ERA] = '0x02';
+        targetSpec.genesis.raw.top[STAKING_FORCE_ERA] = '0x02';
     }
 
-    console.log(JSON.stringify(targetSpec, null, 2));
+    console.log('targetSpec: ');
+    const targetSpecStringified = JSON.stringify(targetSpec, null, 2);
+    // console.log(targetSpecStringified);
+
+    try {
+      fs.writeFileSync('./output.json', targetSpecStringified);
+      console.log('targetSpec written to file successfully');
+    } catch (err) {
+      console.error('unable to write targetSpec to file: ', err);
+    }
 }
